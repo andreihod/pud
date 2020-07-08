@@ -1,0 +1,18 @@
+float = @{ int ~ "." ~ ASCII_DIGIT* ~ (^"e" ~ int)? }
+int = @{ ("+" | "-")? ~ ASCII_DIGIT+ }
+
+operation = _{ add | subtract | power | multiply | divide }
+    add      = { "+" | "plus" | "with" }
+    subtract = { "-" | "minus" | "subtract" }
+    power    = { "^" | "**" }
+    multiply = { "*" | "times" | "multiplied by" | "mul" }
+    divide   = { "/" | "divide by" | "divide" | "div" }
+
+expr = { term ~ (operation ~ term)* }
+term = _{ (float | int) | "(" ~ expr ~ ")" }
+text = @{ (!WHITESPACE ~ ANY)+ }
+input = { (expr | text) ~ input* }
+
+calculation = _{ SOI ~ input ~ EOI }
+
+WHITESPACE = _{ " " | "\t" }
