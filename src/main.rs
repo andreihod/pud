@@ -4,6 +4,7 @@ extern crate pest_derive;
 extern crate lazy_static;
 
 mod lang;
+mod ui;
 use gtk::prelude::*;
 
 fn main() {
@@ -15,19 +16,13 @@ fn main() {
     let glade_src = include_str!("ui.glade");
     let builder = gtk::Builder::from_string(glade_src);
     let window: gtk::Window = builder.get_object("main_window").unwrap();
-    let editor: sourceview::View = builder.get_object("sourceview").unwrap();
+    let source_editor: sourceview::View = builder.get_object("source").unwrap();
+    let eval_editor: sourceview::View = builder.get_object("eval").unwrap();
 
-    editor.get_buffer().unwrap().connect_changed(|text_buffer| {
-        let text = text_buffer
-            .get_text(
-                &text_buffer.get_start_iter(),
-                &text_buffer.get_end_iter(),
-                false,
-            )
-            .unwrap()
-            .to_string();
-        println!("{:#?}", lang::evaluate(text.as_str()));
-    });
+    let buffer = ui::Buffer::new();
+
+    source_editor.set_buffer(Some(buffer.source_buffer.as_ref()));
+    eval_editor.set_buffer(Some(buffer.eval_buffer.as_ref()));
 
     window.show_all();
 

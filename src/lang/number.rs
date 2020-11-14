@@ -1,6 +1,6 @@
 use std::ops::{Add, Div, Mul, Sub};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Number {
     INT(i32),
     FLOAT(f32),
@@ -11,6 +11,13 @@ impl Number {
         match self {
             Number::INT(integer) => integer as f32,
             Number::FLOAT(float) => float,
+        }
+    }
+
+    pub fn as_string(&self) -> String {
+        match self {
+            Number::INT(integer) => format!("{:#}", integer),
+            Number::FLOAT(float) => format!("{:#}", float),
         }
     }
 
