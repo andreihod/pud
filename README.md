@@ -2,7 +2,9 @@
 
 Human friendly calculator app for Linux
 
-**This is a working in progress project, there are a lot of things to be done yet.**
+![pud_example](pud.png "Pud")
+
+**This is a working in progress project.**
 
 ### Introduction
 
