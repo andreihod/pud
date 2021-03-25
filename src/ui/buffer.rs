@@ -1,6 +1,6 @@
 use crate::lang;
 use crate::lang::{Number, Token};
-use gtk::{TextBufferExt, TextIter};
+use gtk::TextBufferExt;
 use regex::Regex;
 use sourceview::{BufferExt, StyleSchemeManagerExt};
 use std::sync::Arc;
@@ -23,12 +23,13 @@ impl Buffer {
         let eval_buffer = new_sourceview_buffer();
         connect_eval_on_change(source_buffer.clone(), eval_buffer.clone());
 
-        let scheme = sourceview::StyleSchemeManager::new()
-            .get_scheme("solarized-dark")
-            .unwrap();
+        let manager = sourceview::StyleSchemeManager::new();
 
-        source_buffer.set_style_scheme(Some(&scheme));
-        eval_buffer.set_style_scheme(Some(&scheme));
+        let source_scheme = manager.get_scheme("solarized-dark").unwrap();
+        let eval_scheme = manager.get_scheme("solarized-light").unwrap();
+
+        source_buffer.set_style_scheme(Some(&source_scheme));
+        eval_buffer.set_style_scheme(Some(&eval_scheme));
 
         Buffer {
             source_buffer: source_buffer,
