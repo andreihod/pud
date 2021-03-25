@@ -57,7 +57,7 @@ keywords, here are some expressions you can write with Pud:
  
 ### TO-DO
 
-- [ ] Graphical User Interface
+- [x] Graphical User Interface
 - [ ] Speed, Distance, Temperature and Time conversions.
 - [ ] Advanced math functions: `ln`, `exp`, etc.
 - [ ] Currencies and Cryptocurrencies conversions.
