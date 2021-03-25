@@ -1,7 +1,16 @@
 use crate::lang;
 use crate::lang::{Number, Token};
-use gtk::TextBufferExt;
+use gtk::{TextBufferExt, TextIter};
+use regex::Regex;
+use sourceview::{BufferExt, StyleSchemeManagerExt};
 use std::sync::Arc;
+
+fn is_new_line(text: &str) -> bool {
+    lazy_static! {
+        static ref RE: Regex = Regex::new(r"^[\n]+").unwrap();
+    }
+    RE.is_match(text)
+}
 
 pub struct Buffer {
     pub source_buffer: Arc<sourceview::Buffer>,
@@ -13,6 +22,13 @@ impl Buffer {
         let source_buffer = new_sourceview_buffer();
         let eval_buffer = new_sourceview_buffer();
         connect_eval_on_change(source_buffer.clone(), eval_buffer.clone());
+
+        let scheme = sourceview::StyleSchemeManager::new()
+            .get_scheme("solarized-dark")
+            .unwrap();
+
+        source_buffer.set_style_scheme(Some(&scheme));
+        eval_buffer.set_style_scheme(Some(&scheme));
 
         Buffer {
             source_buffer: source_buffer,
@@ -28,35 +44,42 @@ fn new_sourceview_buffer() -> Arc<sourceview::Buffer> {
 fn connect_eval_on_change(source: Arc<sourceview::Buffer>, eval: Arc<sourceview::Buffer>) {
     source.connect_changed(move |text_buffer| {
         let mut eval_text = "".to_owned();
-        for i in 0..text_buffer.get_line_count() {
-            eval_line(&mut eval_text, text_buffer, i);
+        let mut iter_start = text_buffer.get_start_iter();
+
+        loop {
+            let mut iter_end = iter_start.clone();
+            iter_end.forward_to_line_end();
+
+            if iter_end == iter_start {
+                break;
+            }
+
+            let line = text_buffer
+                .get_text(&iter_start, &iter_end, false)
+                .map(|gstring| gstring.to_string())
+                .unwrap_or("".to_string());
+
+            eval_text.push_str(&eval_line(line));
+            iter_start.forward_line();
         }
 
         eval.set_text(eval_text.as_ref())
     });
 }
 
-fn eval_line(eval_text: &mut String, text_buffer: &sourceview::Buffer, line_number: i32) {
-    let input = get_line_input(text_buffer, line_number);
+fn eval_line(input: String) -> String {
+    if is_new_line(&input) {
+        return "\n".to_string();
+    }
+
     if let Ok(tokens) = lang::evaluate(input.as_str()) {
         let line_result = find_expr_number(tokens)
             .map(|number| number.as_string())
             .unwrap_or("".to_string());
-        eval_text.push_str(format!("{}\n", line_result).as_ref());
+        format!("{}\n", line_result)
     } else {
-        eval_text.push_str("\n");
+        "\n".to_string()
     }
-}
-
-fn get_line_input(text_buffer: &sourceview::Buffer, line_number: i32) -> String {
-    let start_line = text_buffer.get_iter_at_line(line_number);
-    let mut end_line = start_line.clone();
-    end_line.forward_to_line_end();
-
-    text_buffer
-        .get_text(&start_line, &end_line, false)
-        .map(|gstring| gstring.to_string())
-        .unwrap_or("".to_string())
 }
 
 fn find_expr_number(tokens: Vec<Token>) -> Option<Number> {
